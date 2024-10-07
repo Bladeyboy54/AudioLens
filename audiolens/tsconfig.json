@@ -1,5 +1,5 @@
 {
-  "extends": "expo/tsconfig.base",
+  "extends": "expo/tsconfig.base", //If this isnt working hit Ctrl + Shift + P and run Typescript: Restart TS Server 
   "compilerOptions": {
     "strict": true
   }
