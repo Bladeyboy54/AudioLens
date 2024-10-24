@@ -6,6 +6,7 @@ import { StackNavigationProp } from "@react-navigation/stack";
 import * as ImagePicker from 'expo-image-picker';
 import recognizeText from "../services/OCR-Service";
 import { CameraProps, CameraView, useCameraPermissions } from 'expo-camera';
+import { Ionicons, AntDesign, Entypo } from '@expo/vector-icons';
 // import { Camera, useCameraDevice, useCameraPermission } from 'react-native-vision-camera';
 
 
@@ -19,49 +20,11 @@ const HomeScreen = () => {
     const cameraRef = useRef<CameraView>(null);
     const [facing, setFacing] = useState<CameraProps["facing"]>("back");
     const [permission, requestPermission] = useCameraPermissions();
-    const [pictureSizes, setPictureSizes] = useState<string[]>([]);
-    // const { hasPermission, requestPermission } = useCameraPermission();
-    // const cameraRef = useRef<Camera | null>(null);
     const [imageUri, setImageUri] = useState<string | null>(null);
-    // // const device = useCameraDevice('back');
-    // const [cameraActive, setCameraActive] = useState(true);
     
-
-    //Request camera & gallery permissions
     
-    // if (!hasPermission) {
-    //     // Camera permissions are still loading.
-    //     return <View />;
-    //   }
+    //Handle camera permission /////////////////////////////////////////////////////////////////////////
     
-    //   if (!hasPermission.granted) {
-    //     // Camera permissions are not granted yet.
-    //     return (
-    //       <View style={styles.container}>
-    //         <Text style={styles.message}>We need your permission to show the camera</Text>
-    //         <Button title="Grant Permission" onPress={requestPermission} />
-    //       </View>
-    //     );
-    //   }
-    //   const toggleCameraFacing = () => {
-    //     setFacing((current) => (current === 'back' ? 'front' : 'back'));
-    //   };
-    
-    //Handle taking a picture /////////////////////////////////////////////////////////////////////////
-    useEffect(() => {
-      async function getSizes() {
-        console.log("hi!");
-        console.log(permission);
-        if (permission?.granted && cameraRef.current) {
-          console.log("sized!");
-          const sizes = await cameraRef.current.getAvailablePictureSizesAsync();
-          setPictureSizes(sizes);
-          console.log(sizes);
-        }
-      }
-  
-      getSizes();
-    }, [permission, cameraRef]);
   
     if (!permission) {
       // Camera permissions are still loading.
@@ -83,27 +46,7 @@ const HomeScreen = () => {
     function toggleCameraFacing() {
       setFacing((current) => (current === "back" ? "front" : "back"));
     }
-    // const device = useCameraDevice('back');
     
-
-    // if (device == null) return <Text>Loading Camera...</Text>;
-
-    // const takePicture = async () => {
-    //     if (cameraRef.current) {
-          // const photo = await cameraRef.current?.takePhoto({
-    //         flash: 'off',
-    //       });
-    //       setImageUri(photo.path);
-    //       setCameraActive(false);
-    //     }
-    //   };
-    // const takePicture = async () => {
-    //     if (cameraRef.current) {
-    //       const options = { quality: 1, base64: true, exif: false };
-    //       const photo = await cameraRef.current.takePictureAsync(options);
-    //       setImageUri(photo.uri);
-    //     }
-    //   };
     
 
     //Pick an image from the gallery ///////////////////////////////////////////////////////////////
@@ -132,54 +75,52 @@ const HomeScreen = () => {
         <View style={styles.container}>
           {imageUri ? (
             <>
-              {/* If an image is captured or selected, show the image and options */}
-              <Image source={{ uri: imageUri }} style={styles.preview} />
-              <Button title="Recognize Text" onPress={() => recognizeText(imageUri)} />
-              <Button title="Pick Another Image" onPress={pickImage} />
+              {/* Preview section with back button */}
+              <View style={styles.previewContainer}>
+                  <TouchableOpacity
+                      style={styles.backButton}
+                      onPress={() => setImageUri(null)} // Go back to camera
+                  >
+                      <Ionicons name="arrow-back" size={30} color="white" />
+                  </TouchableOpacity>
+                  <Image source={{ uri: imageUri }} style={styles.preview} />
+                  <Button title="Recognize Text" onPress={() => recognizeText(imageUri)} />
+              </View>
             </>
           ) : (
-            <View style={styles.container}>
-              <View style={{ flex: 1 }}>
-                <CameraView
-                  style={styles.camera}
-                  facing={facing}
-                  ref={cameraRef}
-                  
-                >
-                  <View style={styles.buttonContainer}>
-                    <TouchableOpacity
-                      style={styles.button}
-                      onPress={toggleCameraFacing}
-                    >
-                      <Text style={styles.text}>Flip Camera</Text>
-                    </TouchableOpacity>
-                  </View>
-                </CameraView>
-              </View>
+            
+            <View style={styles.cameraContainer}>
+              <CameraView
+                style={styles.camera}
+                facing={facing}
+                ref={cameraRef}
+              >
 
-              <View style={{ flex: 1 }}>
-                <Button
-                  title="Take Picture"
+              {/* Camera control buttons */}
+              <View style={styles.buttonRow}>
+                {/* Flip Camera Button */}
+                <TouchableOpacity onPress={toggleCameraFacing} style={styles.iconButton}>
+                  <AntDesign name="swap" size={40} color="white" />
+                </TouchableOpacity>
+
+                {/* Capture Image Button */}
+                <TouchableOpacity
+                  style={styles.captureButton}
                   onPress={async () => {
                     const photo = await cameraRef.current?.takePictureAsync();
                     setImageUri(photo!.uri);
                     console.log(JSON.stringify(photo));
                   }}
-                />
-                <View
-                  style={{ height: 1, backgroundColor: "#eee", marginVertical: 20 }}
-                />
-                {pictureSizes.map((size) => (
-                  <Button
-                    key={size}
-                    title={size}
-                    onPress={() => {
-                      // @ts-ignore
-                      setSelectedSize(size)
-                    }}
-                  />
-                ))}
+                >
+                  <Ionicons name="camera" size={50} color="white" />
+                </TouchableOpacity>
+
+                {/* Pick Image from Gallery Button */}
+                <TouchableOpacity onPress={pickImage} style={styles.iconButton}>
+                  <Entypo name="images" size={40} color="white" />
+                </TouchableOpacity>
               </View>
+              </CameraView>
             </View>
           )}
         </View>
@@ -187,40 +128,64 @@ const HomeScreen = () => {
     
 }
 
-const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      justifyContent: 'center',
-    },
-    message: {
-      textAlign: 'center',
-      paddingBottom: 10,
-    },
-    camera: {
-      flex: 1,
-    },
-    preview: {
-      flex: 1,
-      width: '100%',
-      height: '100%',
-    },
-    buttonContainer: {
-      flex: 1,
-      flexDirection: 'row',
-      backgroundColor: 'transparent',
-      justifyContent: 'center',
-      alignItems: 'flex-end',
-    },
-    button: {
-      margin: 20,
-      padding: 10,
-      backgroundColor: 'white',
-      borderRadius: 10,
-    },
-    text: {
-      fontSize: 18,
-      color: 'black',
-    },
-  });
 
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    height: '100%',
+  },
+  cameraContainer: {
+    flex: 1,
+    justifyContent: 'flex-end',
+  },
+  camera: {
+    flex: 1,
+  },
+  previewContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  preview: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
+  },
+  buttonRow: {
+    marginTop: 'auto',
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  captureButton: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 5,
+    borderColor: 'white',
+  },
+  iconButton: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  backButton: {
+    position: 'absolute',
+    top: 40,
+    left: 20,
+    zIndex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    borderRadius: 30,
+    padding: 10,
+  },
+});
 export default HomeScreen;

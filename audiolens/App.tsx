@@ -12,8 +12,8 @@ export default function App() {
 
     <NavigationContainer>
       <Stack.Navigator initialRouteName='Home'>
-        <Stack.Screen name='Home' component={HomeScreen} />
-        <Stack.Screen name="TextRecognition" component={TextRecognitionScreen} />
+        <Stack.Screen name='Home' component={HomeScreen} options={{headerShown: false}}/>
+        <Stack.Screen name="TextRecognition" component={TextRecognitionScreen} options={{headerShown: false}}/>
       </Stack.Navigator>
     </NavigationContainer>
   );
