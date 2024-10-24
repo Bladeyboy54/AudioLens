@@ -5,8 +5,8 @@ import { RootStackParamList } from "../types/navigation";
 import { StackNavigationProp } from "@react-navigation/stack";
 import * as ImagePicker from 'expo-image-picker';
 import recognizeText from "../services/OCR-Service";
-// import { CameraType, CameraView, useCameraPermissions } from 'expo-camera';
-import { Camera, useCameraDevice, useCameraPermission } from 'react-native-vision-camera';
+import { CameraProps, CameraView, useCameraPermissions } from 'expo-camera';
+// import { Camera, useCameraDevice, useCameraPermission } from 'react-native-vision-camera';
 
 
 type HomeScreenProp = StackNavigationProp<RootStackParamList, 'Home'>;
@@ -16,11 +16,15 @@ const HomeScreen = () => {
 
     const navigation = useNavigation<HomeScreenProp>();
 
-    const { hasPermission, requestPermission } = useCameraPermission();
-    const cameraRef = useRef<Camera | null>(null);
+    const cameraRef = useRef<CameraView>(null);
+    const [facing, setFacing] = useState<CameraProps["facing"]>("back");
+    const [permission, requestPermission] = useCameraPermissions();
+    const [pictureSizes, setPictureSizes] = useState<string[]>([]);
+    // const { hasPermission, requestPermission } = useCameraPermission();
+    // const cameraRef = useRef<Camera | null>(null);
     const [imageUri, setImageUri] = useState<string | null>(null);
-    // const device = useCameraDevice('back');
-    const [cameraActive, setCameraActive] = useState(true);
+    // // const device = useCameraDevice('back');
+    // const [cameraActive, setCameraActive] = useState(true);
     
 
     //Request camera & gallery permissions
@@ -43,21 +47,56 @@ const HomeScreen = () => {
     //     setFacing((current) => (current === 'back' ? 'front' : 'back'));
     //   };
     
-    //Handle taking a picture 
-    const device = useCameraDevice('back');
+    //Handle taking a picture /////////////////////////////////////////////////////////////////////////
+    useEffect(() => {
+      async function getSizes() {
+        console.log("hi!");
+        console.log(permission);
+        if (permission?.granted && cameraRef.current) {
+          console.log("sized!");
+          const sizes = await cameraRef.current.getAvailablePictureSizesAsync();
+          setPictureSizes(sizes);
+          console.log(sizes);
+        }
+      }
+  
+      getSizes();
+    }, [permission, cameraRef]);
+  
+    if (!permission) {
+      // Camera permissions are still loading.
+      return <View />;
+    }
+  
+    if (!permission.granted) {
+      // Camera permissions are not granted yet.
+      return (
+        <View style={styles.container}>
+          <Text style={{ textAlign: "center" }}>
+            We need your permission to show the camera
+          </Text>
+          <Button onPress={requestPermission} title="grant permission" />
+        </View>
+      );
+    }
+  
+    function toggleCameraFacing() {
+      setFacing((current) => (current === "back" ? "front" : "back"));
+    }
+    // const device = useCameraDevice('back');
     
 
-    if (device == null) return <Text>Loading Camera...</Text>;
+    // if (device == null) return <Text>Loading Camera...</Text>;
 
-    const takePicture = async () => {
-        if (cameraRef.current) {
-          const photo = await cameraRef.current.takePhoto({
-            flash: 'off',
-          });
-          setImageUri(photo.path);
-          setCameraActive(false);
-        }
-      };
+    // const takePicture = async () => {
+    //     if (cameraRef.current) {
+          // const photo = await cameraRef.current?.takePhoto({
+    //         flash: 'off',
+    //       });
+    //       setImageUri(photo.path);
+    //       setCameraActive(false);
+    //     }
+    //   };
     // const takePicture = async () => {
     //     if (cameraRef.current) {
     //       const options = { quality: 1, base64: true, exif: false };
@@ -67,7 +106,7 @@ const HomeScreen = () => {
     //   };
     
 
-    //Pick an image from the gallery
+    //Pick an image from the gallery ///////////////////////////////////////////////////////////////
     const pickImage = async () => {
         let result = await ImagePicker.launchImageLibraryAsync({
           mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -78,17 +117,17 @@ const HomeScreen = () => {
     
         if (!result.canceled) {
           setImageUri(result.assets[0].uri);
-          setCameraActive(false);
+          
         }
       };
-      if (!hasPermission) {
+      if (!permission) {
         return (
           <View style={styles.container}>
             <Text>We need your permission to access the camera</Text>
           </View>
         );
       }
-
+// Main Return /////////////////////////////////////////////////////////////////////////////////
       return (
         <View style={styles.container}>
           {imageUri ? (
@@ -99,24 +138,49 @@ const HomeScreen = () => {
               <Button title="Pick Another Image" onPress={pickImage} />
             </>
           ) : (
-            cameraActive && (
-          <Camera
-            style={styles.camera}
-            device={device}
-            isActive={cameraActive}
-            ref={cameraRef}
-            photo={true}
-          >
-            <View style={styles.buttonContainer}>
-              <TouchableOpacity style={styles.button} onPress={takePicture}>
-                <Text style={styles.text}>Take Picture</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.button} onPress={pickImage}>
-                <Text style={styles.text}>Pick from Gallery</Text>
-              </TouchableOpacity>
+            <View style={styles.container}>
+              <View style={{ flex: 1 }}>
+                <CameraView
+                  style={styles.camera}
+                  facing={facing}
+                  ref={cameraRef}
+                  
+                >
+                  <View style={styles.buttonContainer}>
+                    <TouchableOpacity
+                      style={styles.button}
+                      onPress={toggleCameraFacing}
+                    >
+                      <Text style={styles.text}>Flip Camera</Text>
+                    </TouchableOpacity>
+                  </View>
+                </CameraView>
+              </View>
+
+              <View style={{ flex: 1 }}>
+                <Button
+                  title="Take Picture"
+                  onPress={async () => {
+                    const photo = await cameraRef.current?.takePictureAsync();
+                    setImageUri(photo!.uri);
+                    console.log(JSON.stringify(photo));
+                  }}
+                />
+                <View
+                  style={{ height: 1, backgroundColor: "#eee", marginVertical: 20 }}
+                />
+                {pictureSizes.map((size) => (
+                  <Button
+                    key={size}
+                    title={size}
+                    onPress={() => {
+                      // @ts-ignore
+                      setSelectedSize(size)
+                    }}
+                  />
+                ))}
+              </View>
             </View>
-          </Camera>
-        )
           )}
         </View>
       );

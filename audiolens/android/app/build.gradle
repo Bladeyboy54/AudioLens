@@ -109,9 +109,9 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace 'com.anonymous.audiolens'
+    namespace 'com.bladenl.audiolens'
     defaultConfig {
-        applicationId 'com.anonymous.audiolens'
+        applicationId 'com.bladenl.audiolens'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

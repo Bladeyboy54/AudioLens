@@ -1,4 +1,4 @@
-package com.anonymous.audiolens
+package com.bladenl.audiolens
 
 import android.app.Application
 import android.content.res.Configuration
