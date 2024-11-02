@@ -32,9 +32,11 @@ const recognizeText = async (imageUri) => {
     const textAnnotations = response.data.responses[0].textAnnotations;
     if (textAnnotations && textAnnotations.length > 0) {
       const detectedText = textAnnotations[0].description;
-      Alert.alert('Detected Text', detectedText);
+      // Alert.alert('Detected Text', detectedText);
+      return detectedText
     } else {
-      Alert.alert('No text detected');
+      // Alert.alert('No text detected');
+      return null
     }
   } catch (error) {
     console.error(error);

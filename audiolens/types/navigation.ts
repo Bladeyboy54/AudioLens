@@ -1,5 +1,5 @@
 export type RootStackParamList = {
     Home: undefined;
-    TextRecognition: undefined;
+    TextRecognition: {ocrText?: string};
   };
   

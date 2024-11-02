@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigation } from "@react-navigation/native";
-import { View, StyleSheet, Text, Button, Image, Alert, TouchableOpacity } from "react-native";
+import { View, StyleSheet, Text, Button, Image, Alert, TouchableOpacity, ActivityIndicator } from "react-native";
 import { RootStackParamList } from "../types/navigation";
 import { StackNavigationProp } from "@react-navigation/stack";
 import * as ImagePicker from 'expo-image-picker';
@@ -21,6 +21,7 @@ const HomeScreen = () => {
     const [facing, setFacing] = useState<CameraProps["facing"]>("back");
     const [permission, requestPermission] = useCameraPermissions();
     const [imageUri, setImageUri] = useState<string | null>(null);
+    const [loading, setLoading] = useState(false);
     
     
     //Handle camera permission /////////////////////////////////////////////////////////////////////////
@@ -47,7 +48,22 @@ const HomeScreen = () => {
       setFacing((current) => (current === "back" ? "front" : "back"));
     }
     
-    
+    //Handle Text Recognition //////////////////////////////////////////////////////////////////////
+
+    const handleRecognizeText = async (imageUri: string) => {
+      try {
+        setLoading(true);
+        const detectedText = await recognizeText(imageUri)
+        setLoading(false);
+        if (detectedText) {
+          navigation.navigate('TextRecognition', {ocrText: detectedText})
+        }
+      } catch (e) {
+        setLoading(false); // Stop loading when there is an error
+        console.error("recognize text error ==>" + e)
+        Alert.alert("Error", "Failed to recognize text")
+      }
+    }
 
     //Pick an image from the gallery ///////////////////////////////////////////////////////////////
     const pickImage = async () => {
@@ -84,7 +100,14 @@ const HomeScreen = () => {
                       <Ionicons name="arrow-back" size={30} color="white" />
                   </TouchableOpacity>
                   <Image source={{ uri: imageUri }} style={styles.preview} />
-                  <Button title="Recognize Text" onPress={() => recognizeText(imageUri)} />
+                  <View style={styles.buttonContainer}>
+                    {loading ? (
+                      <ActivityIndicator size="large" color="#0000ff" />
+                    ) : (
+                      <Button title="Recognize Text" onPress={() => handleRecognizeText(imageUri)} />
+                    )}
+                  </View>
+                  
               </View>
             </>
           ) : (
@@ -186,6 +209,9 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     borderRadius: 30,
     padding: 10,
+  },
+  buttonContainer: {
+    marginTop: 20,
   },
 });
 export default HomeScreen;
