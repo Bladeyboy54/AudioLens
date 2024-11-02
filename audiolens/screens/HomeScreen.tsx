@@ -6,7 +6,9 @@ import { StackNavigationProp } from "@react-navigation/stack";
 import * as ImagePicker from 'expo-image-picker';
 import recognizeText from "../services/OCR-Service";
 import { CameraProps, CameraView, useCameraPermissions } from 'expo-camera';
-import { Ionicons, AntDesign, Entypo } from '@expo/vector-icons';
+import { Ionicons, AntDesign, Entypo, MaterialIcons } from '@expo/vector-icons';
+
+
 // import { Camera, useCameraDevice, useCameraPermission } from 'react-native-vision-camera';
 
 
@@ -19,6 +21,8 @@ const HomeScreen = () => {
 
     const cameraRef = useRef<CameraView>(null);
     const [facing, setFacing] = useState<CameraProps["facing"]>("back");
+    const [flashMode, setFlashMode] = useState<"on" | "off" | "auto">("off");
+    const [autofocus, setAutofocus] = useState<"on" | "off">("off");
     const [permission, requestPermission] = useCameraPermissions();
     const [imageUri, setImageUri] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
@@ -44,10 +48,30 @@ const HomeScreen = () => {
       );
     }
   
+    //Toggle Camera Facing Direction (Front)(Back)//////////////////////////////////////////////////
+
     function toggleCameraFacing() {
       setFacing((current) => (current === "back" ? "front" : "back"));
     }
     
+    //Toggle Flash mode (on)-(off)-(auto)///////////////////////////////////////////////////////////
+
+    const toggleFlashMode = () => {
+      setFlashMode(prevFlashMode => {
+        if (prevFlashMode === "off") return "on";
+        if (prevFlashMode === "on") return "auto";
+        return "off";
+      });
+      
+    }
+    
+    //AutoFocus system ////////////////////////////////////////////////////////////////////////////
+
+    const handleTapToFocus = () => {
+      setAutofocus('on');
+      setTimeout(() => setAutofocus('off'), 500);
+    }
+
     //Handle Text Recognition //////////////////////////////////////////////////////////////////////
 
     const handleRecognizeText = async (imageUri: string) => {
@@ -117,11 +141,17 @@ const HomeScreen = () => {
                 style={styles.camera}
                 facing={facing}
                 ref={cameraRef}
+                flash={flashMode}
+                autofocus={autofocus}
               >
-
+                <TouchableOpacity style={styles.cameraTouchArea} onPress={handleTapToFocus}/>
+                <TouchableOpacity onPress={toggleFlashMode} style={styles.flashButton}>
+                  <MaterialIcons name={`flash-${flashMode}`} size={40} color="white" />
+                </TouchableOpacity>
               {/* Camera control buttons */}
               <View style={styles.buttonRow}>
                 {/* Flip Camera Button */}
+                
                 <TouchableOpacity onPress={toggleCameraFacing} style={styles.iconButton}>
                   <AntDesign name="swap" size={40} color="white" />
                 </TouchableOpacity>
@@ -192,6 +222,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 5,
     borderColor: 'white',
+  },
+  cameraTouchArea: {
+    position: 'absolute',
+    width: '100%',
+    height: '100%'
+  },
+  flashButton: {
+    margin: 60,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   iconButton: {
     width: 60,
