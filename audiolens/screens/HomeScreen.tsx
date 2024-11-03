@@ -23,6 +23,7 @@ const HomeScreen = () => {
     const [facing, setFacing] = useState<CameraProps["facing"]>("back");
     const [flashMode, setFlashMode] = useState<"on" | "off" | "auto">("off");
     const [autofocus, setAutofocus] = useState<"on" | "off">("off");
+    const [showGrid, setShowGrid] = useState(false);
     const [permission, requestPermission] = useCameraPermissions();
     const [imageUri, setImageUri] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
@@ -64,7 +65,10 @@ const HomeScreen = () => {
       });
       
     }
-    
+    // Toggle grid/////////////////////////////////////////////////////////////////////////////////
+
+   
+
     //AutoFocus system ////////////////////////////////////////////////////////////////////////////
 
     const handleTapToFocus = () => {
@@ -144,35 +148,51 @@ const HomeScreen = () => {
                 flash={flashMode}
                 autofocus={autofocus}
               >
-                <TouchableOpacity style={styles.cameraTouchArea} onPress={handleTapToFocus}/>
-                <TouchableOpacity onPress={toggleFlashMode} style={styles.flashButton}>
+                <View style={styles.topButtonRow}>
+                  <TouchableOpacity onPress={() => setShowGrid(prev => !prev)} style={styles.flashButton}>
+                    <Ionicons name={showGrid ? "grid-outline" : "grid"} size={40} color="white" />
+                  </TouchableOpacity>
+                  
+                  <TouchableOpacity onPress={toggleFlashMode} style={styles.flashButton}>
                   <MaterialIcons name={`flash-${flashMode}`} size={40} color="white" />
                 </TouchableOpacity>
-              {/* Camera control buttons */}
-              <View style={styles.buttonRow}>
-                {/* Flip Camera Button */}
+                </View>
                 
-                <TouchableOpacity onPress={toggleCameraFacing} style={styles.iconButton}>
-                  <AntDesign name="swap" size={40} color="white" />
-                </TouchableOpacity>
+                <View style={styles.gridOverlay}>
+                  {/* Horizontal lines */}
+                  <View style={styles.gridLine} />
+                  <View style={styles.gridLine} />
+                  {/* Vertical lines */}
+                  <View style={[styles.gridLine, styles.verticalLine]} />
+                  <View style={[styles.gridLine, styles.verticalLine]} />
+                </View>
+                <TouchableOpacity style={styles.cameraTouchArea} onPress={handleTapToFocus}/>
+                
+                {/* Camera control buttons */}
+                <View style={styles.buttonRow}>
+                  {/* Flip Camera Button */}
+                  
+                  <TouchableOpacity onPress={toggleCameraFacing} style={styles.iconButton}>
+                    <AntDesign name="swap" size={40} color="white" />
+                  </TouchableOpacity>
 
-                {/* Capture Image Button */}
-                <TouchableOpacity
-                  style={styles.captureButton}
-                  onPress={async () => {
-                    const photo = await cameraRef.current?.takePictureAsync();
-                    setImageUri(photo!.uri);
-                    console.log(JSON.stringify(photo));
-                  }}
-                >
-                  <Ionicons name="camera" size={50} color="white" />
-                </TouchableOpacity>
+                  {/* Capture Image Button */}
+                  <TouchableOpacity
+                    style={styles.captureButton}
+                    onPress={async () => {
+                      const photo = await cameraRef.current?.takePictureAsync();
+                      setImageUri(photo!.uri);
+                      console.log(JSON.stringify(photo));
+                    }}
+                  >
+                    <Ionicons name="camera" size={50} color="white" />
+                  </TouchableOpacity>
 
-                {/* Pick Image from Gallery Button */}
-                <TouchableOpacity onPress={pickImage} style={styles.iconButton}>
-                  <Entypo name="images" size={40} color="white" />
-                </TouchableOpacity>
-              </View>
+                  {/* Pick Image from Gallery Button */}
+                  <TouchableOpacity onPress={pickImage} style={styles.iconButton}>
+                    <Entypo name="images" size={40} color="white" />
+                  </TouchableOpacity>
+                </View>
               </CameraView>
             </View>
           )}
@@ -206,12 +226,21 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
   },
+  topButtonRow:{
+    marginBottom: 'auto',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingTop: 40,
+    backgroundColor: '#000'
+  },
   buttonRow: {
     marginTop: 'auto',
     flexDirection: 'row',
     justifyContent: 'space-around',
     alignItems: 'center',
-    marginBottom: 20,
+    paddingBottom: 20,
+    backgroundColor: '#000'
   },
   captureButton: {
     width: 80,
@@ -229,7 +258,7 @@ const styles = StyleSheet.create({
     height: '100%'
   },
   flashButton: {
-    margin: 60,
+
     width: 60,
     height: 60,
     borderRadius: 30,
@@ -257,5 +286,27 @@ const styles = StyleSheet.create({
   buttonContainer: {
     marginTop: 20,
   },
+  gridOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    zIndex: 1,
+    
+
+  },
+  gridLine: {
+    position: 'absolute',
+    backgroundColor: 'rgba(255, 255, 255, 1)',
+    height: '100%',
+    width: 10,
+  },
+  verticalLine: { 
+    width: '100%', 
+    height: 10 
+  }
 });
 export default HomeScreen;
