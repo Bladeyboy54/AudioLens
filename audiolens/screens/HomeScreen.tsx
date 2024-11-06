@@ -7,6 +7,8 @@ import * as ImagePicker from 'expo-image-picker';
 import recognizeText from "../services/OCR-Service";
 import { CameraProps, CameraView, useCameraPermissions } from 'expo-camera';
 import { Ionicons, AntDesign, Entypo, MaterialIcons } from '@expo/vector-icons';
+import { Grid2x2CheckIcon, Grid2x2X, Images, Zap, ZapOff, RefreshCw } from "lucide-react-native";
+import { BlurView } from "expo-blur";
 
 
 // import { Camera, useCameraDevice, useCameraPermission } from 'react-native-vision-camera';
@@ -21,7 +23,7 @@ const HomeScreen = () => {
 
     const cameraRef = useRef<CameraView>(null);
     const [facing, setFacing] = useState<CameraProps["facing"]>("back");
-    const [flashMode, setFlashMode] = useState<"on" | "off" | "auto">("off");
+    const [flashMode, setFlashMode] = useState<"on" | "off">("off");
     const [autofocus, setAutofocus] = useState<"on" | "off">("off");
     const [showGrid, setShowGrid] = useState(false);
     const [permission, requestPermission] = useCameraPermissions();
@@ -60,7 +62,7 @@ const HomeScreen = () => {
     const toggleFlashMode = () => {
       setFlashMode(prevFlashMode => {
         if (prevFlashMode === "off") return "on";
-        if (prevFlashMode === "on") return "auto";
+        // if (prevFlashMode === "on") return "auto";
         return "off";
       });
       
@@ -148,51 +150,60 @@ const HomeScreen = () => {
                 flash={flashMode}
                 autofocus={autofocus}
               >
-                <View style={styles.topButtonRow}>
-                  <TouchableOpacity onPress={() => setShowGrid(prev => !prev)} style={styles.flashButton}>
-                    <Ionicons name={showGrid ? "grid-outline" : "grid"} size={40} color="white" />
-                  </TouchableOpacity>
-                  
-                  <TouchableOpacity onPress={toggleFlashMode} style={styles.flashButton}>
-                  <MaterialIcons name={`flash-${flashMode}`} size={40} color="white" />
-                </TouchableOpacity>
+                <BlurView intensity={50} style={styles.topButtonRowBlur}>
+                  <View style={styles.topButtonRow}>
+                    <TouchableOpacity onPress={() => setShowGrid(prev => !prev)} style={styles.flashButton}>
+                      {showGrid ? <Grid2x2CheckIcon size={40} color="white" /> : <Grid2x2X size={40} color="white" />}
+                    </TouchableOpacity>
+                    
+                    <TouchableOpacity onPress={toggleFlashMode} style={styles.flashButton}>
+                      {flashMode === "on" ? <Zap size={40} color="white" /> : <ZapOff size={40} color="white" />}
+                    </TouchableOpacity>
+                  </View>
+                </BlurView>
+                {showGrid && (
+                  <View style={styles.gridOverlay}>
+                    {/* Horizontal grid lines */}
+                    <View style={[styles.gridLine, styles.horizontalLine, { top: '33%' }]} />
+                    <View style={[styles.gridLine, styles.horizontalLine, { top: '66%' }]} />
+              
+                    {/* Vertical lines */}
+                    <View style={[styles.gridLine, styles.verticalLine, { left: '33%' }]} />
+                    <View style={[styles.gridLine, styles.verticalLine, { left: '66%' }]} />
                 </View>
-                
-                <View style={styles.gridOverlay}>
-                  {/* Horizontal lines */}
-                  <View style={styles.gridLine} />
-                  <View style={styles.gridLine} />
-                  {/* Vertical lines */}
-                  <View style={[styles.gridLine, styles.verticalLine]} />
-                  <View style={[styles.gridLine, styles.verticalLine]} />
-                </View>
+                )}
+               
                 <TouchableOpacity style={styles.cameraTouchArea} onPress={handleTapToFocus}/>
-                
-                {/* Camera control buttons */}
-                <View style={styles.buttonRow}>
-                  {/* Flip Camera Button */}
-                  
-                  <TouchableOpacity onPress={toggleCameraFacing} style={styles.iconButton}>
-                    <AntDesign name="swap" size={40} color="white" />
-                  </TouchableOpacity>
-
-                  {/* Capture Image Button */}
-                  <TouchableOpacity
-                    style={styles.captureButton}
-                    onPress={async () => {
-                      const photo = await cameraRef.current?.takePictureAsync();
-                      setImageUri(photo!.uri);
-                      console.log(JSON.stringify(photo));
-                    }}
-                  >
-                    <Ionicons name="camera" size={50} color="white" />
-                  </TouchableOpacity>
-
-                  {/* Pick Image from Gallery Button */}
-                  <TouchableOpacity onPress={pickImage} style={styles.iconButton}>
-                    <Entypo name="images" size={40} color="white" />
-                  </TouchableOpacity>
-                </View>
+                <TouchableOpacity 
+                  style={styles.captureButtonContainer}
+                  onPress={async () => {
+                    const photo = await cameraRef.current?.takePictureAsync();
+                    setImageUri(photo!.uri);
+                    console.log(JSON.stringify(photo));
+                  }}>
+                  <BlurView intensity={50} style={styles.captureButtonBlur}>
+                    <View
+                      style={styles.captureButton}
+                      
+                    />
+                  </BlurView>
+                </TouchableOpacity>
+                <BlurView intensity={50} style={styles.bottomButtonRowBlur}>
+                  {/* Camera control buttons */}
+                  <View style={styles.buttonRow}>
+                    {/* Flip Camera Button */}
+                    
+                    <TouchableOpacity onPress={toggleCameraFacing} style={styles.iconButton}>
+                      <RefreshCw size={40} color="white" />
+                    </TouchableOpacity>
+                    
+                    {/* Pick Image from Gallery Button */}
+                    <TouchableOpacity onPress={pickImage} style={styles.iconButton}>
+                      <Images size={40} color="white" />
+                    </TouchableOpacity>
+                    
+                  </View>
+                </BlurView>
               </CameraView>
             </View>
           )}
@@ -226,31 +237,84 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
   },
-  topButtonRow:{
-    marginBottom: 'auto',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingTop: 40,
-    backgroundColor: '#000'
+  topButtonRowBlur: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 80,
+    borderBottomLeftRadius: 400,
+    borderBottomRightRadius: 400,
+    overflow: 'hidden', // Required for the blur effect to respect the radius
+    justifyContent: 'center',
   },
-  buttonRow: {
-    marginTop: 'auto',
+  
+  // bottomButtonRowBlur: {
+  //   position: 'absolute',
+  //   bottom: 0,
+  //   left: 0,
+  //   right: 0,
+  //   height: 80,
+  //   borderTopLeftRadius: 400,
+  //   borderTopRightRadius: 400,
+  //   overflow: 'hidden', // Required for the blur effect to respect the radius
+  //   justifyContent: 'center',
+  // },
+
+  bottomButtonRowBlur: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 80, // Adjust to create a larger blurred area if needed
+    borderTopLeftRadius: 400,
+    borderTopRightRadius: 400,
+    overflow: 'hidden',
+    justifyContent: 'center',
+    zIndex: 1, // Ensure this is lower than the capture button
+  },
+  topButtonRow: {
     flexDirection: 'row',
     justifyContent: 'space-around',
     alignItems: 'center',
-    paddingBottom: 20,
-    backgroundColor: '#000'
+    paddingVertical: 10,
   },
+
+  buttonRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    paddingVertical: 10,
+  },
+  captureButtonContainer: {
+    position: 'absolute',
+    bottom: 30, // Adjust to control how much the capture button overlaps the blur container
+    alignSelf: 'center',
+    zIndex: 2,
+  },
+  
+  captureButtonBlur: {
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+    overflow: 'hidden',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  // captureButton: {
+  //   width: 70,
+  //   height: 70,
+  //   borderRadius: 35,
+  //   backgroundColor: 'white', 
+  // },
   captureButton: {
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: 'white',
+    opacity: 0.9,
     borderWidth: 5,
-    borderColor: 'white',
+    borderColor: 'rgba(255, 255, 255, 0.4)',
   },
   cameraTouchArea: {
     position: 'absolute',
@@ -292,21 +356,38 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    justifyContent: 'space-around',
+    // justifyContent: 'space-around',
     alignItems: 'center',
-    zIndex: 1,
+    zIndex: 100,
     
 
   },
   gridLine: {
     position: 'absolute',
-    backgroundColor: 'rgba(255, 255, 255, 1)',
-    height: '100%',
-    width: 10,
+    backgroundColor: 'rgba(255, 255, 255, 0.7)',
   },
-  verticalLine: { 
-    width: '100%', 
-    height: 10 
-  }
+  horizontalLine: {
+    width: '100%',
+    height: 2,
+  },
+  verticalLine: {
+    height: '100%',
+    width: 2,
+  },
+  // horizontalLine: {
+  //   position: 'absolute',
+  //   backgroundColor: 'rgba(255, 255, 255, 0.5)',
+  //   height: 1,
+  //   width: '100%',
+  //   top: '33%',
+  // },
+  // verticalLine: {
+  //   position: 'absolute',
+  //   backgroundColor: 'rgba(255, 255, 255, 0.5)',
+  //   width: 1,
+  //   height: '100%',
+  //   left: '33%',
+  // },
+  
 });
 export default HomeScreen;
