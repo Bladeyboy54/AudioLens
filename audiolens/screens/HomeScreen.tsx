@@ -7,8 +7,9 @@ import * as ImagePicker from 'expo-image-picker';
 import recognizeText from "../services/OCR-Service";
 import { CameraProps, CameraView, useCameraPermissions } from 'expo-camera';
 import { Ionicons, AntDesign, Entypo, MaterialIcons } from '@expo/vector-icons';
-import { Grid2x2CheckIcon, Grid2x2X, Images, Zap, ZapOff, RefreshCw } from "lucide-react-native";
+import { Grid2x2CheckIcon, Grid2x2X, Images, Zap, ZapOff, RefreshCw, ChevronsLeft } from "lucide-react-native";
 import { BlurView } from "expo-blur";
+import { StatusBar } from "expo-status-bar";
 
 
 // import { Camera, useCameraDevice, useCameraPermission } from 'react-native-vision-camera';
@@ -67,9 +68,6 @@ const HomeScreen = () => {
       });
       
     }
-    // Toggle grid/////////////////////////////////////////////////////////////////////////////////
-
-   
 
     //AutoFocus system ////////////////////////////////////////////////////////////////////////////
 
@@ -119,6 +117,7 @@ const HomeScreen = () => {
 // Main Return /////////////////////////////////////////////////////////////////////////////////
       return (
         <View style={styles.container}>
+          <StatusBar style="light" />
           {imageUri ? (
             <>
               {/* Preview section with back button */}
@@ -126,17 +125,27 @@ const HomeScreen = () => {
                   <TouchableOpacity
                       style={styles.backButton}
                       onPress={() => setImageUri(null)} // Go back to camera
+                      accessible={true}
+                      accessibilityLabel="Back"
                   >
-                      <Ionicons name="arrow-back" size={30} color="white" />
+                      <ChevronsLeft size={30} color="rgba(255, 184, 84, 1)" />
                   </TouchableOpacity>
                   <Image source={{ uri: imageUri }} style={styles.preview} />
                   <View style={styles.buttonContainer}>
                     {loading ? (
-                      <ActivityIndicator size="large" color="#0000ff" />
+                      <ActivityIndicator size="large" color="rgba(255, 184, 84, 1)" />
                     ) : (
-                      <Button title="Recognize Text" onPress={() => handleRecognizeText(imageUri)} />
+                      <TouchableOpacity 
+                        style={styles.recognizeButton} 
+                        onPress={() => handleRecognizeText(imageUri)} 
+                      >
+                        <Text style={styles.buttonText}>
+                          Read This Image
+                        </Text>
+                      </TouchableOpacity>
                     )}
                   </View>
+                  
                   
               </View>
             </>
@@ -150,14 +159,14 @@ const HomeScreen = () => {
                 flash={flashMode}
                 autofocus={autofocus}
               >
-                <BlurView intensity={50} style={styles.topButtonRowBlur}>
+                <BlurView intensity={50} tint="dark" style={styles.topButtonRowBlur}>
                   <View style={styles.topButtonRow}>
                     <TouchableOpacity onPress={() => setShowGrid(prev => !prev)} style={styles.flashButton}>
-                      {showGrid ? <Grid2x2CheckIcon size={40} color="white" /> : <Grid2x2X size={40} color="white" />}
+                      {showGrid ? <Grid2x2CheckIcon size={30} color="white" /> : <Grid2x2X size={30} color="white" />}
                     </TouchableOpacity>
                     
                     <TouchableOpacity onPress={toggleFlashMode} style={styles.flashButton}>
-                      {flashMode === "on" ? <Zap size={40} color="white" /> : <ZapOff size={40} color="white" />}
+                      {flashMode === "on" ? <Zap size={30} color="white" /> : <ZapOff size={30} color="white" />}
                     </TouchableOpacity>
                   </View>
                 </BlurView>
@@ -174,21 +183,8 @@ const HomeScreen = () => {
                 )}
                
                 <TouchableOpacity style={styles.cameraTouchArea} onPress={handleTapToFocus}/>
-                <TouchableOpacity 
-                  style={styles.captureButtonContainer}
-                  onPress={async () => {
-                    const photo = await cameraRef.current?.takePictureAsync();
-                    setImageUri(photo!.uri);
-                    console.log(JSON.stringify(photo));
-                  }}>
-                  <BlurView intensity={50} style={styles.captureButtonBlur}>
-                    <View
-                      style={styles.captureButton}
-                      
-                    />
-                  </BlurView>
-                </TouchableOpacity>
-                <BlurView intensity={50} style={styles.bottomButtonRowBlur}>
+                
+                <BlurView intensity={50} tint="dark" style={styles.bottomButtonRowBlur}>
                   {/* Camera control buttons */}
                   <View style={styles.buttonRow}>
                     {/* Flip Camera Button */}
@@ -204,6 +200,20 @@ const HomeScreen = () => {
                     
                   </View>
                 </BlurView>
+                <TouchableOpacity 
+                  style={styles.captureButtonContainer}
+                  onPress={async () => {
+                    const photo = await cameraRef.current?.takePictureAsync();
+                    setImageUri(photo!.uri);
+                    console.log(JSON.stringify(photo));
+                  }}>
+                  <BlurView intensity={50}  style={styles.captureButtonBlur}>
+                    <View
+                      style={styles.captureButton}
+                      
+                    />
+                  </BlurView>
+                </TouchableOpacity>
               </CameraView>
             </View>
           )}
@@ -231,53 +241,75 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: '#000'
   },
   preview: {
-    flex: 1,
     width: '100%',
     height: '100%',
+    resizeMode: 'contain',
+    
+  },
+  backButton: {
+    backgroundColor: 'rgba(60, 42, 106, 1)',
+    borderRadius: 30,
+    position: 'absolute',
+    top: 30,
+    left: 10,
+    padding: 10,
+    zIndex: 10,
+  },
+  buttonContainer: {
+    position: 'absolute',
+    bottom: 20, 
+    left: 0,
+    right: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  recognizeButton: {
+    backgroundColor: 'rgba(60, 42, 106, 1)', 
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  buttonText: {
+    color: 'rgba(255, 184, 84, 1)', 
+    fontSize: 24,
+    fontWeight: '600',
   },
   topButtonRowBlur: {
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
-    height: 80,
+    height: 90,
     borderBottomLeftRadius: 400,
     borderBottomRightRadius: 400,
-    overflow: 'hidden', // Required for the blur effect to respect the radius
+    overflow: 'hidden',
     justifyContent: 'center',
+    backgroundColor: 'rgba(60, 42, 106, 0.5)',
+    
   },
   
-  // bottomButtonRowBlur: {
-  //   position: 'absolute',
-  //   bottom: 0,
-  //   left: 0,
-  //   right: 0,
-  //   height: 80,
-  //   borderTopLeftRadius: 400,
-  //   borderTopRightRadius: 400,
-  //   overflow: 'hidden', // Required for the blur effect to respect the radius
-  //   justifyContent: 'center',
-  // },
-
   bottomButtonRowBlur: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
-    height: 80, // Adjust to create a larger blurred area if needed
+    height: 80, 
     borderTopLeftRadius: 400,
     borderTopRightRadius: 400,
     overflow: 'hidden',
     justifyContent: 'center',
-    zIndex: 1, // Ensure this is lower than the capture button
+    zIndex: 1, 
+    backgroundColor: 'rgba(60, 42, 106, 0.5)'
   },
   topButtonRow: {
     flexDirection: 'row',
     justifyContent: 'space-around',
     alignItems: 'center',
-    paddingVertical: 10,
+    paddingTop: 20,
   },
 
   buttonRow: {
@@ -288,9 +320,9 @@ const styles = StyleSheet.create({
   },
   captureButtonContainer: {
     position: 'absolute',
-    bottom: 30, // Adjust to control how much the capture button overlaps the blur container
+    bottom: 30, 
     alignSelf: 'center',
-    zIndex: 2,
+    zIndex: 20,
   },
   
   captureButtonBlur: {
@@ -300,13 +332,9 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: 'rgba(60, 42, 106, 0.5)'
   },
-  // captureButton: {
-  //   width: 70,
-  //   height: 70,
-  //   borderRadius: 35,
-  //   backgroundColor: 'white', 
-  // },
+  
   captureButton: {
     width: 80,
     height: 80,
@@ -314,7 +342,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     opacity: 0.9,
     borderWidth: 5,
-    borderColor: 'rgba(255, 255, 255, 0.4)',
+    borderColor: 'rgba(255, 184, 84, 0.5)',
   },
   cameraTouchArea: {
     position: 'absolute',
@@ -323,10 +351,10 @@ const styles = StyleSheet.create({
   },
   flashButton: {
 
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    width: 45,
+    height: 45,
+    borderRadius: 23,
+    backgroundColor: 'rgba(255, 184, 84, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -334,29 +362,17 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    backgroundColor: 'rgba(255, 184, 84, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  backButton: {
-    position: 'absolute',
-    top: 40,
-    left: 20,
-    zIndex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    borderRadius: 30,
-    padding: 10,
-  },
-  buttonContainer: {
-    marginTop: 20,
-  },
+  
   gridOverlay: {
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
-    // justifyContent: 'space-around',
     alignItems: 'center',
     zIndex: 100,
     
@@ -374,20 +390,7 @@ const styles = StyleSheet.create({
     height: '100%',
     width: 2,
   },
-  // horizontalLine: {
-  //   position: 'absolute',
-  //   backgroundColor: 'rgba(255, 255, 255, 0.5)',
-  //   height: 1,
-  //   width: '100%',
-  //   top: '33%',
-  // },
-  // verticalLine: {
-  //   position: 'absolute',
-  //   backgroundColor: 'rgba(255, 255, 255, 0.5)',
-  //   width: 1,
-  //   height: '100%',
-  //   left: '33%',
-  // },
+
   
 });
 export default HomeScreen;
