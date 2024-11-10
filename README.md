@@ -18,7 +18,7 @@
     <a href="https://github.com/Bladeyboy54/AudioLens/tree/main/audiolens"><strong>Explore the docs »</strong></a>
     <br />
     <br />
-    <a href="">View Demo</a>
+    <a href="https://youtu.be/Aze9V55X3bk">View Demo</a>
     ·
     <a href="bug report link">Report Bug</a>
     ·
